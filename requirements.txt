@@ -1,0 +1,6 @@
+requests
+beautifulsoup4
+pandas
+fpdf2
+openpyxl
+lxml
