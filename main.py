@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 # =========================
 # SETTINGS
 # =========================
-# WHOOGLE_URL = "http://localhost:5000/search?q="
-WHOOGLE_URL = "http://192.168.1.38:5000/search?q="
+WHOOGLE_URL = "http://localhost:5000/search?q="
+# WHOOGLE_URL = "http://192.168.1.38:5000/search?q="
 OLLAMA_URL = "http://localhost:11434/api/chat"
 OLLAMA_MODEL = "tinyllama"   # change if needed
    #"phi-3-mini"
