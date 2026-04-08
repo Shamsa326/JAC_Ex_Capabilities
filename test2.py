@@ -157,32 +157,25 @@ Webpage text:
         print(f"Error with Ollama for {page_data['source_link']}: {e}")
         return None
 
-
 # =========================
 # STEP 4: SAVE RESULTS
 # =========================
-# def save_results(results):
-#     """
-#     Save results to Excel and JSON.
-#     """
-#     if not results:
-#         print("No results to save.")
-#         return
+def save_results(results):
+    """
+    Save results to CSV only.
+    """
+    if not results:
+        print("No results to save.")
+        return
 
-#     df = pd.DataFrame(results)
+    df = pd.DataFrame(results)
 
-#     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-#     excel_file = f"extracted_results_{timestamp}.xlsx"
-#     json_file = f"extracted_results_{timestamp}.json"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    csv_file = f"extracted_results_{timestamp}.csv"
 
-#     df.to_excel(excel_file, index=False)
+    df.to_csv(csv_file, index=False, encoding="utf-8-sig")
 
-#     with open(json_file, "w", encoding="utf-8") as f:
-#         json.dump(results, f, ensure_ascii=False, indent=4)
-
-#     print(f"\nSaved Excel: {excel_file}")
-#     print(f"Saved JSON : {json_file}")
-
+    print(f"\nSaved CSV: {csv_file}")
 
 # =========================
 # MAIN
@@ -216,8 +209,9 @@ def main():
     print("\nFinal extracted data:")
     print(json.dumps(all_results, indent=4, ensure_ascii=False))
 
-    # save_results(all_results)
+    save_results(all_results)
 
 
 if __name__ == "__main__":
     main()
+
