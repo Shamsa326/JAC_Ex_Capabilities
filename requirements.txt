@@ -4,3 +4,10 @@ pandas
 fpdf2
 openpyxl
 lxml
+
+
+pip uninstall lxml -y 
+pip install --upgrade pip 
+pip install beautifulsoup4 requests 
+pip install html5lib 
+pip install requests beautifulsoup4 pandas openpyxl fpdf2

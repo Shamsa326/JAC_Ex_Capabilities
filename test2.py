@@ -94,16 +94,18 @@ If there are multiple values, return them as a list.
 Required fields and keep them in same order:
 - title
 - date
-- company_name
-- capability
+- goal
+- abstract
 - weapon_name
 - aircraft_type
-- location
+- capability
+- company_name
 - contact
-- abstract
+- location
+- cost
 - source_link
-- cost_or_prices
 - technical_specifications
+- rest_information
 
 Webpage title:
 {page_data["page_title"]}
