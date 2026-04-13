@@ -1,4 +1,5 @@
 import requests
+import os
 from bs4 import BeautifulSoup
 from urllib.parse import quote
 import json
@@ -40,6 +41,9 @@ You are an autonomous AI-powered military helicopter intelligence agent.
 
 generate intelligence queries about military helicopters and defense aviation developments.
 
+make query more related to helicopter detailes such as manufacturer,Classification (attack, utility, transport, SAR, special operations, etc.),
+technical specifications,operational use cases ,weapon systems,Technologies used (AI, autonomy, targeting systems, defensive aids),Maximum speed,
+Payload capacity,Range, Crew and troop capacity.
 
 ### make  only search queries in 15 words.
 
@@ -54,6 +58,7 @@ RULES
 
  give me only 1 search query
  give me only 1 search query
+
 
 ----------------------------------
 Past search
@@ -208,6 +213,23 @@ Text:
         return None
 
 
+# # =========================
+# # STEP 5: SAVE CSV
+# # =========================
+# def save_results(results):
+#     if not results:
+#         print("No results.")
+#         return
+
+#     df = pd.DataFrame(results)
+
+#     filename = f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+#     df.to_csv(filename, index=False, encoding="utf-8-sig")
+
+#     print(f"\n💾 Saved: {filename}")
+
+
+
 # =========================
 # STEP 5: SAVE CSV
 # =========================
@@ -218,11 +240,20 @@ def save_results(results):
 
     df = pd.DataFrame(results)
 
+    # ✅ Folder name
+    folder_name = "Extracted_files"
+
+    # ✅ Create folder if not exists
+    os.makedirs(folder_name, exist_ok=True)
+
+    # ✅ File path inside folder
     filename = f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-    df.to_csv(filename, index=False, encoding="utf-8-sig")
+    file_path = os.path.join(folder_name, filename)
 
-    print(f"\n💾 Saved: {filename}")
+    # ✅ Save CSV
+    df.to_csv(file_path, index=False, encoding="utf-8-sig")
 
+    print(f"\n💾 Saved: {file_path}")
 
 # =========================
 # MAIN PIPELINE
