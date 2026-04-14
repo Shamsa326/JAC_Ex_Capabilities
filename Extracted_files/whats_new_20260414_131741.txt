@@ -1,9 +1,0 @@
-WHAT IS NEW
-- New aircraft model: AH-64E Apache Guardian
-
-NEW SOURCES
-- source 1: Boeing, https://www.boeing.com/defense/military-rotorcraft/ah-64-apache
-- source 2: Defence Equipment & Support, https://des.mod.uk/what-we-do/raf-procurement-support/apache-helicopter/
-- source 3: airtattoo, https://www.airtattoo.com/riat-2025/aircraft-2025/boeing-ah-64e-apache-guardian-1/
-
-No significant new information found in the old records.

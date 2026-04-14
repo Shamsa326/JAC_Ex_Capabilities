@@ -1,29 +1,11 @@
-What advanced sensors does the Bell UH-1Y Venom utilize for reconnaissance missions?
+What are the technical specifications of Sikorsky UH-60 Black Hawk attack helicopters?
 
 ============================================================
-WHAT IS NEW SUMMARY - 2026-04-14 13:07:32
-============================================================
-WHAT IS NEW
-- New aircraft type: The Bell UH-1Y Venom includes advanced infrared sensor systems which provide enhanced situational awareness.
-- New capability: The UH-1Y Venom shares 85% commonality with the Bell AH-1Z components, reducing logistics and maintenance costs.
-
-NEW SOURCES
-- https://www.bellflight.com/products/bell-uh-1y
-- https://www.natodays.cz/aircraft/uh-1y-venom
-Here is the first search query:
-
-What technical specifications does the Boeing AH-64E Apache Guardian boast for anti-tank missions?
-
-============================================================
-WHAT IS NEW SUMMARY - 2026-04-14 13:17:41
+WHAT IS NEW SUMMARY - 2026-04-14 13:48:36
 ============================================================
 WHAT IS NEW
-- New aircraft model: AH-64E Apache Guardian
+- No significant new information found.
 
 NEW SOURCES
-- source 1: Boeing, https://www.boeing.com/defense/military-rotorcraft/ah-64-apache
-- source 2: Defence Equipment & Support, https://des.mod.uk/what-we-do/raf-procurement-support/apache-helicopter/
-- source 3: airtattoo, https://www.airtattoo.com/riat-2025/aircraft-2025/boeing-ah-64e-apache-guardian-1/
-
-No significant new information found in the old records.
-What is the maximum speed of the Sikorsky UH-60M Black Hawk helicopter during a combat search and rescue mission?
+- None
+What are the latest specifications of the Russian Mi-24 attack helicopter's AI-powered targeting systems?

@@ -1,7 +1,0 @@
-WHAT IS NEW
-- New aircraft type: The Bell UH-1Y Venom includes advanced infrared sensor systems which provide enhanced situational awareness.
-- New capability: The UH-1Y Venom shares 85% commonality with the Bell AH-1Z components, reducing logistics and maintenance costs.
-
-NEW SOURCES
-- https://www.bellflight.com/products/bell-uh-1y
-- https://www.natodays.cz/aircraft/uh-1y-venom
