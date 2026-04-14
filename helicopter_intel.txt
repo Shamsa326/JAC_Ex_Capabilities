@@ -9,3 +9,12 @@ WHAT IS NEW
 NEW SOURCES
 - None
 What are the latest specifications of the Russian Mi-24 attack helicopter's AI-powered targeting systems?
+
+============================================================
+WHAT IS NEW SUMMARY - 2026-04-14 13:55:10
+============================================================
+WHAT IS NEW
+- New aircraft type: Attack helicopter with transport capabilities (Mil Mi-24)
+
+NEW SOURCES
+- source 1: https://en.wikipedia.org/wiki/Mil_Mi-24
