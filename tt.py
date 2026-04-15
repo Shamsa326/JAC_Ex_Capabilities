@@ -16,7 +16,7 @@ WHOOGLE_URL = "http://172.28.32.1:5000/search?q="
 OLLAMA_URL = "http://localhost:11434/api/chat"
 
 GEN_MODEL = "llama3"        # for query generation
-EXTRACT_MODEL = "qwen2.5"   # for extraction
+EXTRACT_MODEL = "qwen2.5:14b"   # for extraction
 COMPARE_MODEL = "qwen2.5"   # for comparing old CSV data vs new extracted data
 
 MAX_URLS = 10

@@ -1,2 +1,0 @@
-http://www.google.com/
-https://github.com/benbusby/whoogle-search
