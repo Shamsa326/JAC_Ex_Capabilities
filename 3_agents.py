@@ -6,8 +6,7 @@ import json
 import pandas as pd
 from datetime import datetime
 import time
-from multiprocessing import Process, Manager
-from urllib.parse import quote, urlparse, parse_qs, unquote
+from multiprocessing import Process
 
 # =========================
 # SETTINGS
@@ -19,14 +18,11 @@ GEN_MODEL = "llama3"        # for query generation
 EXTRACT_MODEL = "qwen2.5"   # for extraction
 COMPARE_MODEL = "qwen2.5"   # for comparing old CSV data vs new extracted data
 
-MAX_URLS = 10
+MAX_URLS = 5
 MAX_TEXT_LENGTH = 10000
 MAX_COMPARE_OLD = 20
 MAX_COMPARE_NEW = 10
 SLEEP_SECONDS = 300  # 5 minutes
-
-# Shared global blocklist file for all agents
-GLOBAL_URL_MEMORY_FILE = "global_processed_urls.txt"
 
 
 # =========================
@@ -38,46 +34,6 @@ def load_past_search(memory_file):
             return file.read()
     except Exception:
         return ""
-
-
-# =========================
-# GLOBAL URL HELPERS
-# =========================
-def load_urls_from_file(file_path):
-    if not os.path.exists(file_path):
-        return set()
-
-    with open(file_path, "r", encoding="utf-8") as f:
-        return set(line.strip() for line in f if line.strip())
-
-
-def append_url_to_file(file_path, url):
-    with open(file_path, "a", encoding="utf-8") as f:
-        f.write(url + "\n")
-
-
-def reserve_global_url(url, shared_url_dict, global_lock):
-    """
-    Reserve URL globally before processing.
-    Returns True if this process reserved it successfully.
-    Returns False if another agent already reserved/processed it.
-    """
-    with global_lock:
-        if url in shared_url_dict:
-            return False
-
-        shared_url_dict[url] = True
-        append_url_to_file(GLOBAL_URL_MEMORY_FILE, url)
-        return True
-
-
-def release_global_url(url, shared_url_dict, global_lock):
-    """
-    Optional release function.
-    In this design we do NOT release reserved URLs because once reserved,
-    we want all agents to permanently skip them in future runs.
-    """
-    pass
 
 
 # =========================
@@ -127,10 +83,14 @@ Past search:
 
 
 # =========================
-# URL MEMORY HELPERS (PER AGENT)
+# URL MEMORY HELPERS
 # =========================
 def load_old_urls(url_memory_file):
-    return load_urls_from_file(url_memory_file)
+    if not os.path.exists(url_memory_file):
+        return set()
+
+    with open(url_memory_file, "r", encoding="utf-8") as f:
+        return set(line.strip() for line in f if line.strip())
 
 
 def save_new_urls(urls, url_memory_file):
@@ -145,174 +105,32 @@ def save_new_urls(urls, url_memory_file):
 # =========================
 # STEP 2: SEARCH WHOOGLE
 # =========================
-from urllib.parse import quote, urlparse, parse_qs, unquote, urljoin
-
-def is_bad_url(url: str) -> bool:
-    if not url:
-        return True
-
-    u = url.strip().lower()
-
-    blocked_keywords = [
-        "google.com/maps",
-        "maps.google",
-        "/maps/",
-        "google.com/search",
-        "/search?",
-        "webcache",
-        "googleusercontent",
-        "javascript:",
-        "mailto:"
-    ]
-
-    for bad in blocked_keywords:
-        if bad in u:
-            return True
-
-    return False
-
-
-def looks_like_real_page(url: str) -> bool:
-    """
-    Keep only real pages that can be extracted.
-    """
-    if not url:
-        return False
-
-    parsed = urlparse(url)
-
-    if parsed.scheme not in ("http", "https"):
-        return False
-
-    if not parsed.netloc:
-        return False
-
-    return True
-
-
-def clean_result_url(href: str, whoogle_base: str):
-    if not href:
-        return None
-
-    href = href.strip()
-
-    # Skip obvious junk first
-    if href.startswith("#") or href.startswith("javascript:") or href.startswith("mailto:"):
-        return None
-
-    # 1) Full direct URL
-    if href.startswith("http://") or href.startswith("https://"):
-        url = unquote(href)
-        if is_bad_url(url):
-            return None
-        if looks_like_real_page(url):
-            return url
-        return None
-
-    # 2) Relative redirect styles commonly seen in search engines
-    # Examples:
-    # /url?q=https://example.com
-    # /url?url=https://example.com
-    # /redirect?url=https://example.com
-    if href.startswith("/"):
-        parsed = urlparse(href)
-        qs = parse_qs(parsed.query)
-
-        for key in ["q", "url", "u", "target"]:
-            real_url = qs.get(key, [None])[0]
-            if real_url:
-                real_url = unquote(real_url)
-                if real_url.startswith(("http://", "https://")):
-                    if not is_bad_url(real_url) and looks_like_real_page(real_url):
-                        return real_url
-
-        # 3) If it is just a normal relative link on the Whoogle page,
-        # convert to absolute and inspect it.
-        absolute_url = urljoin(whoogle_base, href)
-
-        # If it still points back to Whoogle/search internals, skip it
-        if "172.28.32.1:5000" in absolute_url and "/search" in absolute_url:
-            return None
-
-        if not is_bad_url(absolute_url) and looks_like_real_page(absolute_url):
-            return absolute_url
-
-    return None
-
-
-def debug_first_links(soup, limit=30):
-    print("\n===== RAW WHOOGLE HREFS =====")
-    anchors = soup.find_all("a", href=True)
-
-    if not anchors:
-        print("No <a href> tags found on the Whoogle page.")
-        return
-
-    for i, a in enumerate(anchors[:limit], 1):
-        print(f"{i}. {a.get('href', '')}")
-
-
-def search_whoogle(query: str, url_memory_file: str, shared_url_dict, global_lock):
+def search_whoogle(query: str, url_memory_file: str):
     search_url = WHOOGLE_URL + quote(query)
 
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
-
-    response = requests.get(search_url, headers=headers, timeout=30)
+    response = requests.get(search_url, timeout=30)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Helpful debug
-    print(f"\n🔎 Query: {query}")
-    print(f"🌐 Whoogle request URL: {search_url}")
-    print(f"📄 HTML length: {len(response.text)}")
-
     links = []
-    seen = set()
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
 
-    anchors = soup.find_all("a", href=True)
-    print(f"🔗 Total anchors found in page: {len(anchors)}")
+        if href.startswith("http://") or href.startswith("https://"):
+            if href not in links:
+                links.append(href)
 
-    # Print raw hrefs if nothing works later
-    # debug_first_links(soup)
+    old_urls = load_old_urls(url_memory_file)
 
-    whoogle_base = WHOOGLE_URL.split("/search?q=")[0]
-
-    for a in anchors:
-        href = a.get("href", "").strip()
-        real_url = clean_result_url(href, whoogle_base)
-
-        if real_url and real_url not in seen:
-            seen.add(real_url)
-            links.append(real_url)
-
-    print(f"🧾 Clean links before memory filtering: {len(links)}")
-    for i, link in enumerate(links[:10], 1):
-        print(f"   {i}. {link}")
-
-    # Agent local memory
-    agent_old_urls = load_old_urls(url_memory_file)
-    filtered_links = [link for link in links if link not in agent_old_urls]
-    print(f"🧠 After agent memory filtering: {len(filtered_links)}")
-
-    # Global memory
-    with global_lock:
-        global_old_urls = set(shared_url_dict.keys())
-
-    filtered_links = [link for link in filtered_links if link not in global_old_urls]
-    print(f"🧠 Global blocklist size: {len(global_old_urls)}")
-    print(f"🧠 After global filtering: {len(filtered_links)}")
-
+    filtered_links = [link for link in links if link not in old_urls]
+    duplicate_count = len(links) - len(filtered_links)
     new_links = filtered_links[:MAX_URLS]
-    print(f"✅ Final new links: {len(new_links)}")
 
-    # If still empty, show raw hrefs for diagnosis
-    if not new_links:
-        debug_first_links(soup)
+    print(f"\n🧠 Filtered {duplicate_count} duplicate URLs from {url_memory_file}")
 
     return new_links
+
 
 # =========================
 # STEP 3: EXTRACT WEBPAGE TEXT
@@ -605,7 +423,7 @@ def append_summary_to_memory(text_output, memory_file):
 # =========================
 # MAIN PIPELINE
 # =========================
-def main(agent_name, system_prompt, shared_url_dict, global_lock):
+def main(agent_name, system_prompt):
     memory_file = f"{agent_name}_helicopter_intel.txt"
     url_memory_file = f"{agent_name}_processed_urls.txt"
     output_folder = f"{agent_name}_Extracted_files"
@@ -618,7 +436,7 @@ def main(agent_name, system_prompt, shared_url_dict, global_lock):
         return
 
     print(f"\n🔎 [{agent_name}] Searching Whoogle...")
-    urls = search_whoogle(query, url_memory_file, shared_url_dict, global_lock)
+    urls = search_whoogle(query, url_memory_file)
 
     if not urls:
         print(f"[{agent_name}] No new URLs found.")
@@ -632,12 +450,6 @@ def main(agent_name, system_prompt, shared_url_dict, global_lock):
 
     for i, url in enumerate(urls, 1):
         print(f"\n[{agent_name}] [{i}/{len(urls)}] Processing: {url}")
-
-        # Reserve globally BEFORE processing
-        reserved = reserve_global_url(url, shared_url_dict, global_lock)
-        if not reserved:
-            print(f"⏭️ [{agent_name}] Skipped globally reserved URL: {url}")
-            continue
 
         page = extract_webpage_text(url)
         if not page:
@@ -677,11 +489,11 @@ def main(agent_name, system_prompt, shared_url_dict, global_lock):
 # =========================
 # LOOP FOR EACH AGENT
 # =========================
-def run_agent_loop(agent_name, system_prompt, shared_url_dict, global_lock):
+def run_agent_loop(agent_name, system_prompt):
     while True:
         try:
             print(f"\n🚀 Starting new cycle for {agent_name}...\n")
-            main(agent_name, system_prompt, shared_url_dict, global_lock)
+            main(agent_name, system_prompt)
 
             print(f"\n⏳ [{agent_name}] Waiting before next run...\n")
             time.sleep(SLEEP_SECONDS)
@@ -697,21 +509,6 @@ def run_agent_loop(agent_name, system_prompt, shared_url_dict, global_lock):
 
 
 if __name__ == "__main__":
-    # Make sure global file exists
-    if not os.path.exists(GLOBAL_URL_MEMORY_FILE):
-        with open(GLOBAL_URL_MEMORY_FILE, "w", encoding="utf-8") as f:
-            pass
-
-    # Shared state across all 3 agent processes
-    manager = Manager()
-    shared_url_dict = manager.dict()
-    global_lock = manager.Lock()
-
-    # Load existing global URLs from file into shared memory
-    existing_global_urls = load_urls_from_file(GLOBAL_URL_MEMORY_FILE)
-    for url in existing_global_urls:
-        shared_url_dict[url] = True
-
     prompt_1 = """
 You are an autonomous AI-powered military helicopter intelligence agent.
 
@@ -769,8 +566,8 @@ T206H
 UH-60L
 UH-60M
 
-### Make only search queries in 15 words.
 
+### Make only search queries in 15 words.
 ----------------------------------
 RULES
 ----------------------------------
@@ -782,13 +579,12 @@ RULES
 
     prompt_3 = """
 You are an autonomous AI-powered military helicopter weapons system intelligence agent.
+Generate intelligence search queries about helicopter weapon systems, including air-to-ground missiles, rockets, gun systems,
+ targeting pods, fire control systems, defensive aids, Radars, electronic warfare suites, countermeasures, and integrated weapon technologies for combat helicopters.
 
-Generate intelligence search queries about helicopter weapon systems, including air-to-ground missiles,
-rockets, gun systems, targeting pods, fire control systems, defensive aids, radars,
-electronic warfare suites, countermeasures, and integrated weapon technologies for combat helicopters.
+
 
 ### Make only search queries in 15 words.
-
 ----------------------------------
 RULES
 ----------------------------------
@@ -798,9 +594,9 @@ RULES
 - Return only 1 search query
 """
 
-    p1 = Process(target=run_agent_loop, args=("agent1", prompt_1, shared_url_dict, global_lock))
-    p2 = Process(target=run_agent_loop, args=("agent2", prompt_2, shared_url_dict, global_lock))
-    p3 = Process(target=run_agent_loop, args=("agent3", prompt_3, shared_url_dict, global_lock))
+    p1 = Process(target=run_agent_loop, args=("agent1", prompt_1))
+    p2 = Process(target=run_agent_loop, args=("agent2", prompt_2))
+    p3 = Process(target=run_agent_loop, args=("agent3", prompt_3))
 
     p1.start()
     p2.start()

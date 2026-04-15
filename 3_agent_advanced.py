@@ -7,7 +7,6 @@ import pandas as pd
 from datetime import datetime
 import time
 from multiprocessing import Process, Manager
-from urllib.parse import quote, urlparse, parse_qs, unquote
 
 # =========================
 # SETTINGS
@@ -19,7 +18,7 @@ GEN_MODEL = "llama3"        # for query generation
 EXTRACT_MODEL = "qwen2.5"   # for extraction
 COMPARE_MODEL = "qwen2.5"   # for comparing old CSV data vs new extracted data
 
-MAX_URLS = 10
+MAX_URLS = 5
 MAX_TEXT_LENGTH = 10000
 MAX_COMPARE_OLD = 20
 MAX_COMPARE_NEW = 10
@@ -145,174 +144,44 @@ def save_new_urls(urls, url_memory_file):
 # =========================
 # STEP 2: SEARCH WHOOGLE
 # =========================
-from urllib.parse import quote, urlparse, parse_qs, unquote, urljoin
-
-def is_bad_url(url: str) -> bool:
-    if not url:
-        return True
-
-    u = url.strip().lower()
-
-    blocked_keywords = [
-        "google.com/maps",
-        "maps.google",
-        "/maps/",
-        "google.com/search",
-        "/search?",
-        "webcache",
-        "googleusercontent",
-        "javascript:",
-        "mailto:"
-    ]
-
-    for bad in blocked_keywords:
-        if bad in u:
-            return True
-
-    return False
-
-
-def looks_like_real_page(url: str) -> bool:
-    """
-    Keep only real pages that can be extracted.
-    """
-    if not url:
-        return False
-
-    parsed = urlparse(url)
-
-    if parsed.scheme not in ("http", "https"):
-        return False
-
-    if not parsed.netloc:
-        return False
-
-    return True
-
-
-def clean_result_url(href: str, whoogle_base: str):
-    if not href:
-        return None
-
-    href = href.strip()
-
-    # Skip obvious junk first
-    if href.startswith("#") or href.startswith("javascript:") or href.startswith("mailto:"):
-        return None
-
-    # 1) Full direct URL
-    if href.startswith("http://") or href.startswith("https://"):
-        url = unquote(href)
-        if is_bad_url(url):
-            return None
-        if looks_like_real_page(url):
-            return url
-        return None
-
-    # 2) Relative redirect styles commonly seen in search engines
-    # Examples:
-    # /url?q=https://example.com
-    # /url?url=https://example.com
-    # /redirect?url=https://example.com
-    if href.startswith("/"):
-        parsed = urlparse(href)
-        qs = parse_qs(parsed.query)
-
-        for key in ["q", "url", "u", "target"]:
-            real_url = qs.get(key, [None])[0]
-            if real_url:
-                real_url = unquote(real_url)
-                if real_url.startswith(("http://", "https://")):
-                    if not is_bad_url(real_url) and looks_like_real_page(real_url):
-                        return real_url
-
-        # 3) If it is just a normal relative link on the Whoogle page,
-        # convert to absolute and inspect it.
-        absolute_url = urljoin(whoogle_base, href)
-
-        # If it still points back to Whoogle/search internals, skip it
-        if "172.28.32.1:5000" in absolute_url and "/search" in absolute_url:
-            return None
-
-        if not is_bad_url(absolute_url) and looks_like_real_page(absolute_url):
-            return absolute_url
-
-    return None
-
-
-def debug_first_links(soup, limit=30):
-    print("\n===== RAW WHOOGLE HREFS =====")
-    anchors = soup.find_all("a", href=True)
-
-    if not anchors:
-        print("No <a href> tags found on the Whoogle page.")
-        return
-
-    for i, a in enumerate(anchors[:limit], 1):
-        print(f"{i}. {a.get('href', '')}")
-
-
 def search_whoogle(query: str, url_memory_file: str, shared_url_dict, global_lock):
+
+   
     search_url = WHOOGLE_URL + quote(query)
 
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
-
-    response = requests.get(search_url, headers=headers, timeout=30)
+    response = requests.get(search_url, timeout=30)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, "html.parser")
-
-    # Helpful debug
-    print(f"\n🔎 Query: {query}")
-    print(f"🌐 Whoogle request URL: {search_url}")
-    print(f"📄 HTML length: {len(response.text)}")
-
+   
+   
     links = []
-    seen = set()
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
 
-    anchors = soup.find_all("a", href=True)
-    print(f"🔗 Total anchors found in page: {len(anchors)}")
+        if href.startswith("http://") or href.startswith("https://"):
+            if href not in links:
+                links.append(href)
 
-    # Print raw hrefs if nothing works later
-    # debug_first_links(soup)
-
-    whoogle_base = WHOOGLE_URL.split("/search?q=")[0]
-
-    for a in anchors:
-        href = a.get("href", "").strip()
-        real_url = clean_result_url(href, whoogle_base)
-
-        if real_url and real_url not in seen:
-            seen.add(real_url)
-            links.append(real_url)
-
-    print(f"🧾 Clean links before memory filtering: {len(links)}")
-    for i, link in enumerate(links[:10], 1):
-        print(f"   {i}. {link}")
-
-    # Agent local memory
     agent_old_urls = load_old_urls(url_memory_file)
-    filtered_links = [link for link in links if link not in agent_old_urls]
-    print(f"🧠 After agent memory filtering: {len(filtered_links)}")
 
-    # Global memory
+    # First remove agent-local duplicates
+    filtered_links = [link for link in links if link not in agent_old_urls]
+
+    # Then remove global duplicates
     with global_lock:
         global_old_urls = set(shared_url_dict.keys())
 
     filtered_links = [link for link in filtered_links if link not in global_old_urls]
-    print(f"🧠 Global blocklist size: {len(global_old_urls)}")
-    print(f"🧠 After global filtering: {len(filtered_links)}")
 
     new_links = filtered_links[:MAX_URLS]
-    print(f"✅ Final new links: {len(new_links)}")
 
-    # If still empty, show raw hrefs for diagnosis
-    if not new_links:
-        debug_first_links(soup)
+    print(f"\n🧠 Agent local filtered URLs using {url_memory_file}")
+    print(f"🧠 Global blocklist size: {len(global_old_urls)}")
+    print(f"🧠 New candidate URLs after global filtering: {len(new_links)}")
 
     return new_links
+
 
 # =========================
 # STEP 3: EXTRACT WEBPAGE TEXT

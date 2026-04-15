@@ -17,7 +17,6 @@ SYSTEM_PROMPT = f"""You are an autonomous AI-powered military helicopter intelli
 generate intelligence queries about military helicopters and defense aviation developments.
 
 
-
 ### make  only search queries in 15 words.
 
 ----------------------------------
