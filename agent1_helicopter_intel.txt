@@ -1,2 +1,9 @@
-What are the top speed and payload capacity of the Boeing AH-64 Apache attack helicopter?
-What are the technical specifications and operational use cases of the Sikorsky UH-60 Black Hawk utility helicopter?
+What are the technical specifications of the Boeing AH-64E Apache Guardian attack helicopter?
+
+============================================================
+WHAT IS NEW SUMMARY - 2026-04-16 11:48:38
+============================================================
+WHAT IS NEW
+- The AH-64E Apache Guardian now includes the AGM-179 Joint Air-to-Ground Missile (JAGM) in its weapon arsenal.
+- The AH-64E Apache Guardian has enhanced capabilities for counter-unmanned aerial system (C-UAS) operations, making it a versatile platform for modern warfare.
+What are the technical specifications of the Leonardo AW139 utility helicopter's maximum speed and payload capacity?

@@ -1,2 +1,9 @@
-AH-64E capabilities in desert terrain scenarios
-AS565SB specifications comparison with UH-60M variants for special operations missions.
+AH-64E specifications comparison with AH-64D and UH-60M variants.
+
+============================================================
+WHAT IS NEW SUMMARY - 2026-04-16 11:29:33
+============================================================
+WHAT IS NEW
+- The AH-64 Apache now includes enhanced capabilities such as precision engagement, situational awareness, networked operations, unmanned aircraft control, digital connectivity, and dominant multirole attack capabilities.
+- The technical specifications have been updated to include more detailed information about the ordnance, with a maximum of 16 HELLFIRE missiles and 76 2.75-inch rockets along with 1,200 30 mm chain gun rounds.
+AH-64D vs AH-64E comparison of avionics and communication systems.

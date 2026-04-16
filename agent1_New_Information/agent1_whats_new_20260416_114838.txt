@@ -1,0 +1,3 @@
+WHAT IS NEW
+- The AH-64E Apache Guardian now includes the AGM-179 Joint Air-to-Ground Missile (JAGM) in its weapon arsenal.
+- The AH-64E Apache Guardian has enhanced capabilities for counter-unmanned aerial system (C-UAS) operations, making it a versatile platform for modern warfare.
