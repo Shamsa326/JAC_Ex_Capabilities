@@ -7,3 +7,4 @@ WHAT IS NEW
 - The AH-64E Apache Guardian now includes the AGM-179 Joint Air-to-Ground Missile (JAGM) in its weapon arsenal.
 - The AH-64E Apache Guardian has enhanced capabilities for counter-unmanned aerial system (C-UAS) operations, making it a versatile platform for modern warfare.
 What are the technical specifications of the Leonardo AW139 utility helicopter's maximum speed and payload capacity?
+What are the technical specifications of the Sikorsky UH-60M Black Hawk utility helicopter's maximum speed and payload capacity?

@@ -7,3 +7,4 @@ WHAT IS NEW
 - The AH-64 Apache now includes enhanced capabilities such as precision engagement, situational awareness, networked operations, unmanned aircraft control, digital connectivity, and dominant multirole attack capabilities.
 - The technical specifications have been updated to include more detailed information about the ordnance, with a maximum of 16 HELLFIRE missiles and 76 2.75-inch rockets along with 1,200 30 mm chain gun rounds.
 AH-64D vs AH-64E comparison of avionics and communication systems.
+AH-64D vs AH-64E comparison of avionics and communication systems.

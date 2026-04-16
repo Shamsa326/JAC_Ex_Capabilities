@@ -6,3 +6,4 @@ WHAT IS NEW SUMMARY - 2026-04-16 11:46:44
 WHAT IS NEW
 - The Armed Black Hawk helicopter model from Lockheed Martin is introduced with a new capability set that includes a six-station weapons management suite and modular armed kit options.
 Air-to-ground missile guidance systems for combat helicopters with advanced radar and electronic warfare countermeasures capabilities.
+Air-to-ground missile guidance systems for combat helicopters with advanced radar and electronic warfare countermeasures capabilities.
